@@ -24,6 +24,7 @@ import (
 	"go.mozilla.org/sops/config"
 	"go.mozilla.org/sops/gcpkms"
 	"go.mozilla.org/sops/keys"
+
 	"go.mozilla.org/sops/keyservice"
 	"go.mozilla.org/sops/kms"
 	"go.mozilla.org/sops/logging"
@@ -192,6 +193,7 @@ func main() {
 						pgpFps := c.StringSlice("pgp")
 						kmsArns := c.StringSlice("kms")
 						gcpKmses := c.StringSlice("gcp-kms")
+						vaultTransits := c.StringSlice("vault")
 						azkvs := c.StringSlice("azure-kv")
 						var group sops.KeyGroup
 						for _, fp := range pgpFps {
@@ -202,6 +204,9 @@ func main() {
 						}
 						for _, kms := range gcpKmses {
 							group = append(group, gcpkms.NewMasterKeyFromResourceID(kms))
+						}
+						for _, transit := range vaultTransits {
+							group = append(group, vault.NewMasterKeyFromPath(transit))
 						}
 						for _, url := range azkvs {
 							k, err := azkv.NewMasterKeyFromURL(url)

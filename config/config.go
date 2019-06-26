@@ -88,17 +88,19 @@ type azureKVKey struct {
 }
 
 type creationRule struct {
-	FilenameRegex     string `yaml:"filename_regex"`
-	PathRegex         string `yaml:"path_regex"`
-	KMS               string
-	AwsProfile        string `yaml:"aws_profile"`
-	PGP               string
-	GCPKMS            string     `yaml:"gcp_kms"`
-	AzureKeyVault     string     `yaml:"azure_keyvault"`
-	KeyGroups         []keyGroup `yaml:"key_groups"`
-	ShamirThreshold   int        `yaml:"shamir_threshold"`
-	UnencryptedSuffix string     `yaml:"unencrypted_suffix"`
-	EncryptedSuffix   string     `yaml:"encrypted_suffix"`
+	FilenameRegex      string `yaml:"filename_regex"`
+	PathRegex          string `yaml:"path_regex"`
+	KMS                string
+	AwsProfile         string `yaml:"aws_profile"`
+	PGP                string
+	GCPKMS             string     `yaml:"gcp_kms"`
+	AzureKeyVault      string     `yaml:"azure_keyvault"`
+	VaultTransiBackend string     `yaml:"vault_backend"`
+	VaultKeyName       string     `yaml:"vault_keyname"`
+	KeyGroups          []keyGroup `yaml:"key_groups"`
+	ShamirThreshold    int        `yaml:"shamir_threshold"`
+	UnencryptedSuffix  string     `yaml:"unencrypted_suffix"`
+	EncryptedSuffix    string     `yaml:"encrypted_suffix"`
 }
 
 // Load loads a sops config file into a temporary struct
