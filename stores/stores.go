@@ -19,6 +19,7 @@ import (
 	"go.mozilla.org/sops/gcpkms"
 	"go.mozilla.org/sops/kms"
 	"go.mozilla.org/sops/pgp"
+	"go.mozilla.org/sops/vault"
 )
 
 // SopsFile is a struct used by the stores as a helper to unmarshal the SOPS metadata
@@ -40,6 +41,7 @@ type Metadata struct {
 	KMSKeys                   []kmskey    `yaml:"kms" json:"kms"`
 	GCPKMSKeys                []gcpkmskey `yaml:"gcp_kms" json:"gcp_kms"`
 	AzureKeyVaultKeys         []azkvkey   `yaml:"azure_kv" json:"azure_kv"`
+	VaultKeys                 []vaultkey  `yaml:"vault" json:"vault"`
 	LastModified              string      `yaml:"lastmodified" json:"lastmodified"`
 	MessageAuthenticationCode string      `yaml:"mac" json:"mac"`
 	PGPKeys                   []pgpkey    `yaml:"pgp" json:"pgp"`
@@ -76,6 +78,13 @@ type gcpkmskey struct {
 	EncryptedDataKey string `yaml:"enc" json:"enc"`
 }
 
+type vaultkey struct {
+	TransitBackend   string `yaml:"backend" json:"backend"`
+	KeyName          string `yaml:"keyname" json:"keyname"`
+	CreatedAt        string `yaml:"created_at" json:"created_at"`
+	EncryptedDataKey string `yaml:"enc" json:"enc"`
+}
+
 type azkvkey struct {
 	VaultURL         string `yaml:"vault_url" json:"vault_url"`
 	Name             string `yaml:"name" json:"name"`
@@ -98,6 +107,7 @@ func MetadataFromInternal(sopsMetadata sops.Metadata) Metadata {
 		m.PGPKeys = pgpKeysFromGroup(group)
 		m.KMSKeys = kmsKeysFromGroup(group)
 		m.GCPKMSKeys = gcpkmsKeysFromGroup(group)
+		m.VaultKeys = vaultKeysFromGroup(group)
 		m.AzureKeyVaultKeys = azkvKeysFromGroup(group)
 	} else {
 		for _, group := range sopsMetadata.KeyGroups {
@@ -105,6 +115,7 @@ func MetadataFromInternal(sopsMetadata sops.Metadata) Metadata {
 				KMSKeys:           kmsKeysFromGroup(group),
 				PGPKeys:           pgpKeysFromGroup(group),
 				GCPKMSKeys:        gcpkmsKeysFromGroup(group),
+				VaultKeys:         vaultKeysFromGroup(group),
 				AzureKeyVaultKeys: azkvKeysFromGroup(group),
 			})
 		}
@@ -149,6 +160,21 @@ func gcpkmsKeysFromGroup(group sops.KeyGroup) (keys []gcpkmskey) {
 		case *gcpkms.MasterKey:
 			keys = append(keys, gcpkmskey{
 				ResourceID:       key.ResourceID,
+				CreatedAt:        key.CreationDate.Format(time.RFC3339),
+				EncryptedDataKey: key.EncryptedKey,
+			})
+		}
+	}
+	return
+}
+
+func vaultKeysFromGroup(group sops.KeyGroup) (keys []vaultkey) {
+	for _, key := range group {
+		switch key := key.(type) {
+		case *vault.MasterKey:
+			keys = append(keys, vaultkey{
+				TransitBackend:   key.TransitBackend,
+				KeyName:          key.KeyName,
 				CreatedAt:        key.CreationDate.Format(time.RFC3339),
 				EncryptedDataKey: key.EncryptedKey,
 			})
